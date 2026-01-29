@@ -1,0 +1,185 @@
+---
+title: "ComputationalThinking1"
+author: "Paige G and Leah W"
+format: pdf
+editor: visual
+---
+
+# Libraries
+
+```{r}
+library(tidyverse)
+library(here)
+```
+
+## Question 1.1
+
+```{r}
+# Create a new function called add_together
+# x and y will be the two arguments to the function
+add_together  <- function(x, y){
+  
+  # Add x and y together, store as the object "output"
+  output <- x + y
+  
+  # Print out whatever is stored in "output"
+  return(output)
+  
+} 
+
+add_together(x=3, y=5)
+```
+
+## Question 1.2
+
+```{r eval= FALSE}
+add_together(x=3, y="five")
+```
+
+```         
+Error in x + y : non-numeric argument to binary operator
+```
+
+The error code is telling us that it's a numeric structure value, but it got a string instead.
+
+## Question 1.3
+
+```{r}
+math_time <- function(x,y,z){
+  output<- ((x-y)^2)/z
+  return(output)
+}
+
+math_time(x=5,y=2,z=9)
+```
+
+## Question 1.4
+
+```{r}
+bison <- c(1000, 800, 1200, 1400)
+
+deviation <- function(weights){
+  mean<- mean(weights)
+  sd <- weights-mean
+  return(sd)
+}
+
+deviation(bison)
+```
+
+# Iteration
+
+## Across function
+
+```{r}
+head(iris)
+```
+
+## Q 2.1
+
+```{r}
+help(iris)
+```
+
+The measurements are in centimeters.
+
+## Q2.2
+
+```{r}
+iris %>%
+  group_by(Species) %>% 
+  summarize(across(.cols = everything(), 
+                   .fns = median))
+```
+
+## Question 2.3
+
+```{r}
+cereal <- read.csv(here("data/cereal.csv"))
+colnames(cereal)
+
+cereal %>% 
+  group_by(mfr) %>% 
+  summarize(across(.cols = where(is.numeric),
+                   .fns = mean))
+```
+
+## Q2.4
+
+```{r}
+for (i in 1:10) {
+  print(sqrt(i))
+}
+```
+
+## Q2.5a
+
+```{r}
+N0 = 300  #initial population size
+
+years = 50  #number of years into the future
+
+N = vector(length = years)  # create an empty vector to store pop. sizes
+
+N[1] = N0  #initial population size should be the first N
+
+lambda = 0.95  #growth rate
+
+for (t in 2:50) {
+  N[t] = N[t - 1] * lambda # Apply the equation
+}
+
+# store data
+popn_data2 <- tibble(years = 1:years, # Make the years column = 1, 2, 3, ..., 20
+                    popn = N) 
+```
+
+## Q2.5b
+
+```{r}
+popn_data2 %>% 
+  ggplot(aes(x=years, y=popn))+
+  geom_point()
+```
+
+## Q 2.6
+
+Paige: Summarize/across makes the most sense, but probably has narrower applications than a for loop does. Having a strong understanding of a for loop has a lot of potential uses!
+
+Leah: For loops make strong intuitive sense!
+
+## Q 2.7
+
+```{r}
+# Store a vector of unique species names from the Species column of Iris
+spp_names <- unique(iris$Species)
+
+# Repeat the for loop for the number of unique species names. I.e., 3 species
+# times
+for (i in 1:length(spp_names)) {
+  
+  filt_data <- iris %>% 
+    #  for each loop, create a filter where only one of the species names present.
+    #creates 3 filt_data tibbles, one for each species
+    filter(Species == spp_names[i])
+  
+  # for each loop, plot just that filtered data
+  plot <- filt_data %>% 
+    # map aesthetics to x and y axis using ggplot
+    ggplot(aes(x = Petal.Length,
+               y = Petal.Width)) +
+    # scatter plot
+    geom_point() +
+    # with a line through it
+    geom_smooth(method = "lm") +
+    # set the x and y axis limits
+    lims(x = c(0,8),
+         y = c(0,3)) +
+    # name the plot the species name that is specified for loop
+    ggtitle(paste("Species:", spp_names[i]))
+  
+  # actually print/show the plot(s)
+  print(plot)
+}
+
+```
