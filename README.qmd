@@ -50,7 +50,7 @@ To create a function, we start by assigning the function a name with the assignm
 
 Then, we use the `function()` function (yes, there's a function called `function`) to tell R it will be a function. We list the **arguments** in our function between parentheses and include any default values. These are the function’s inputs. Then, in between two curly braces { }, we enter R code that tells R what to do with the inputs, and what to return to the function user (the output).
 
-------
+------------------------------------------------------------------------
 
 ## Working with single values as input
 
@@ -87,7 +87,7 @@ add_one(x = 10)
 
 Our very first homemade function! Nice!
 
---------
+------------------------------------------------------------------------
 
 Let's make this a little more complicated and add in a second argument. This function will take two numbers as input and add them together. Let's call those arguments `x` and `y`. Separate them with a comma within the `function()` function.
 
@@ -110,7 +110,7 @@ add_together  <- function(x, y){
 Feed our new function `add_together()` two numbers: Add together a 3 and a 5 within the function
 
 ```{r}
-
+add_together(x=3, y=5)
 ```
 
 ------------------------------------------------------------------------
@@ -122,10 +122,10 @@ What happens if a function receives unexpected input? Feed our new function `add
 Important for QMD: When you try to render this document, Quarto will get mad that you're running code that doesn't work. In the code chunk where you add together 3 and "five", substitute the `{r}` for `{r eval=FALSE}` so that it does not evaluate this chunk of code (click "Source" instead of "Visual" in the top left of the document in order to see the `{r}`)
 
 ```{r eval=FALSE}
-
+add_together(x=3, y="five")
 ```
 
--------
+------------------------------------------------------------------------
 
 You can access the source code for a function by typing it's name without parentheses and clicking enter.
 
@@ -144,8 +144,12 @@ $$(x - y)^2/z$$
 Then, run that equation with `x = 5`, `y = 2`, and `z = 9`. What is the output?
 
 ```{r}
+math_time <- function(x,y,z){
+  output<- ((x-y)^2)/z
+  return(output)
+}
 
-
+math_time(x=5,y=2,z=9)
 ```
 
 ------------------------------------------------------------------------
@@ -199,8 +203,13 @@ Here's a tricky one: Write a function called `deviation` that takes a vector as 
 After you've created the function, feed the `bison` vector to it as input.
 
 ```{r}
+deviation <- function(weights){
+  mean<- mean(weights)
+  sd <- weights-mean
+  return(sd)
+}
 
-
+deviation(bison)
 ```
 
 I hope that you are starting to see a glimmer of the utility of writing functions; they can make things much easier for us, while also making us feel like super cool coders.
@@ -218,7 +227,7 @@ Iteration in R means repeatedly performing the same action but in different ways
 
 ## across()
 
-We'll start with yet another dplyr function, `across()`. To illustrate iterating using the `across()` function, let's look at the built-in iris flower morphometric data. Take a look at the help page to familiarize yourself with the columns. 
+We'll start with yet another dplyr function, `across()`. To illustrate iterating using the `across()` function, let's look at the built-in iris flower morphometric data. Take a look at the help page to familiarize yourself with the columns.
 
 ```{r}
 # Look at the first 6 rows of iris
@@ -227,8 +236,7 @@ head(iris)
 
 ### Q2.1: What are the units that the sepal and petal columns are measured in?
 
-
--------
+------------------------------------------------------------------------
 
 Let's say that we want to calculate means for all four of these columns separately for each species. In the last lesson I asked you to first pivot the energy source columns to long format, and then group those variables and summarize them to calculate a mean. However, sometimes having the columns pivoted all together in a single column doesn't make sense. For instance, here, we might want `Petal.length` and `Petal.width` to be distinct columns that can be related to one another (for instance in a graph comparing the two).
 
@@ -245,7 +253,7 @@ iris %>%
 
 You can imagine that this will get very tedious if you have tens or even hundreds of columns. Instead, you can use `across()`, which iterates across each column that you specify.
 
-You’ll use the first two arguments to `across()` every time you use it: the first argument, `.cols`, specifies which columns you want to iterate over, and the second argument, `.fns`, specifies what to do with each column. 
+You’ll use the first two arguments to `across()` every time you use it: the first argument, `.cols`, specifies which columns you want to iterate over, and the second argument, `.fns`, specifies what to do with each column.
 
 ```{r}
 iris %>%
@@ -263,12 +271,11 @@ iris %>%
                    .fns = mean))
 ```
 
---------
+------------------------------------------------------------------------
 
-There are two additional selection techniques that are particularly useful for selecting columns in `across()`: `everything()` and `where()`. 
+There are two additional selection techniques that are particularly useful for selecting columns in `across()`: `everything()` and `where()`.
 
 `everything()` is straightforward: it selects every (non-grouping) column:
-
 
 ```{r}
 iris %>%
@@ -279,18 +286,20 @@ iris %>%
 
 Note the grouping column(s) (in this case `Species`) are not included in `across()`, because they’re automatically preserved by `summarize()`.
 
---------
+------------------------------------------------------------------------
 
 ### Q2.2 Summarize to calculate the median across all columns
 
 Group the `iris` data by `species` and calculate a `median` across all of the columns. (What function do you think you should use to calculate a median?)
 
 ```{r}
-
+iris %>%
+  group_by(Species) %>% 
+  summarize(across(.cols = everything(), 
+                   .fns = median))
 ```
 
-
-------------
+------------------------------------------------------------------------
 
 `where()` is another way to select columns, and allows you to select columns based on their type:
 
@@ -299,7 +308,6 @@ Group the `iris` data by `species` and calculate a `median` across all of the co
 -   `where(is.Date)` selects all date columns.
 -   `where(is.POSIXct)` selects all date-time columns.
 -   `where(is.logical)` selects all logical columns.
-
 
 ```{r}
 iris %>%
@@ -312,18 +320,22 @@ iris %>%
 
 ### Q2.3 Summarize to calculate the mean across all numeric columns in the cereal data
 
-1) Read in the `cereal` data that we worked with back in the first data wrangling lesson. It is already stored in the `data` folder of this repository. 
-2) Group the data by manufacturer and calculate a mean value for all of the *numeric* columns in that dataset.
+1)  Read in the `cereal` data that we worked with back in the first data wrangling lesson. It is already stored in the `data` folder of this repository.
+2)  Group the data by manufacturer and calculate a mean value for all of the *numeric* columns in that dataset.
 
 ```{r}
+cereal <- read.csv(here("data/cereal.csv"))
+colnames(cereal)
 
+cereal %>% 
+  group_by(mfr) %>% 
+  summarize(across(.cols = where(is.numeric),
+                   .fns = mean))
 ```
 
-
---------
+------------------------------------------------------------------------
 
 ## For-loops
-
 
 ### Loop through a simple equation
 
@@ -338,7 +350,7 @@ for (i in 1:5) {
 }
 ```
 
-This is a dynamic bit of code where an "index" `i` is iteratively replaced by each value in the vector `1:5` (which is 1, 2, 3, 4, 5). 
+This is a dynamic bit of code where an "index" `i` is iteratively replaced by each value in the vector `1:5` (which is 1, 2, 3, 4, 5).
 
 Let's dissect what the loop is doing: because the first value in our sequence `1:5` is 1, the loop starts by replacing i with 1 and runs everything between the { }. Loops typically use i as the counter, short for iteration, but you are free to use whatever you like, such as `x`, `number`, or `rhubarb`.
 
@@ -349,7 +361,6 @@ We could do this all manually of course. To manually run the first two iteration
 i <- 1
 print(i)
 ```
-
 
 ```{r}
 # Second iteration where i = 2
@@ -369,18 +380,19 @@ for (i in 1:5) {
 
 As with before, the for loop starts with `i = 1` and runs what we tell it to. When `i = 1`, it prints out `i*2`, which equals 2. Then, when `i = 2`, it prints out `i*2`, which equals 4, and so forth.
 
------
+------------------------------------------------------------------------
 
 ### Q2.4 Create a for loop that iterates from 1 to 10 and squares the value of the index `i`
 
 Create a for loop that iterates from 1 to 10 and squares the value of the index `i`, then prints out that output
 
 ```{r}
-
+for (i in 1:10) {
+  print(sqrt(i))
+}
 ```
 
-
-----------
+------------------------------------------------------------------------
 
 ### Simulate data using a for-loop
 
@@ -389,7 +401,6 @@ One fun way we can use a for loop is by iteratively simulating data. Let's simul
 $$ N[t] = N[t - 1] * lambda $$
 
 The population at time `t` is `N[t]`, and we can calculate it by taking the population from the previous time step `t-1`, which is represented by `N[t-1]`, and multiplying that by a growth rate `lambda`. Think of this as if you had 100 individuals in time `t-1` and you population was growing by 20%, `lambda` would equal 1.2, so your population at time `t` would be: `100*1.2 = 120`. Let's simulate this over 20 time steps.
-
 
 ```{r}
 N0 = 100  #initial population size
@@ -421,8 +432,7 @@ N[5]
 N[1]
 ```
 
-
-Now we will start the for loop: Here we say that element number "t" in the vector N will equal the previous year's N multiplied by lambda. For instance, in year `t = 5`,  the newly created population value in year 5 will equal the population in year `t = 4` times `lambda`. 
+Now we will start the for loop: Here we say that element number "t" in the vector N will equal the previous year's N multiplied by lambda. For instance, in year `t = 5`, the newly created population value in year 5 will equal the population in year `t = 4` times `lambda`.
 
 ```{r}
 # For every year t in 2 through 20 (remember, "years" also equals 20), apply the following equation
@@ -445,7 +455,6 @@ popn_data <- tibble(years = 1:years, # Make the years column = 1, 2, 3, ..., 20
                     popn = N) # Make the population column the corresponding population vector that we calculated
 ```
 
-
 ```{r}
 # Now plot the data with years on the x axis and population on the y
 popn_data %>% 
@@ -454,7 +463,7 @@ popn_data %>%
 
 ```
 
-------
+------------------------------------------------------------------------
 
 ### Q2.5a Rerun the for loop with the following parameters:
 
@@ -464,26 +473,37 @@ Copy and paste the for loop from above, but change the initial parameters so tha
 -   The growth rate = 0.95
 -   The number of years to iterate over = 50
 
-
 ```{r}
+N0 = 300  #initial population size
 
+years = 50  #number of years into the future
 
+N = vector(length = years)  # create an empty vector to store pop. sizes
+
+N[1] = N0  #initial population size should be the first N
+
+lambda = 0.95  #growth rate
+
+for (t in 2:50) {
+  N[t] = N[t - 1] * lambda # Apply the equation
+}
 ```
 
 ### Q2.5b Plot the data and interpret
 
 Plot your data and describe how the population is changing.
 
-
 ```{r}
-
+popn_data2 %>% 
+  ggplot(aes(x=years, y=popn))+
+  geom_point()
 ```
 
-------
+------------------------------------------------------------------------
 
 ### Loop through data frames
 
-Lastly, I want to demonstrate how to loop through dataframes in a couple different ways. Up above, we were referencing certain  elements of a vector by index, aka by which number element it was (e.g. `N[5]` is the 5th element in the vector N). Vectors are one dimensional, so you can access any element within it with just one number. Data frames, however, are two dimensional: they have both rows and columns. Let's check out the `iris` data again:
+Lastly, I want to demonstrate how to loop through dataframes in a couple different ways. Up above, we were referencing certain elements of a vector by index, aka by which number element it was (e.g. `N[5]` is the 5th element in the vector N). Vectors are one dimensional, so you can access any element within it with just one number. Data frames, however, are two dimensional: they have both rows and columns. Let's check out the `iris` data again:
 
 ```{r}
 head(iris)
@@ -496,6 +516,7 @@ For instance, to get the first row:
 ```{r}
 iris[1,]
 ```
+
 To get the data in the third column (which will print out as a vector):
 
 ```{r}
@@ -509,7 +530,7 @@ And to get the exact value in the cell in the 1st row and 3rd column:
 iris[1,3]
 ```
 
-We can replace all of these numbers with the `i` index to iteratively perform some action on a number of rows or columns that we want. 
+We can replace all of these numbers with the `i` index to iteratively perform some action on a number of rows or columns that we want.
 
 For instance, let's print out all of the values for each column, 1 through 5. I've added a little bit of text that will print out to tell us what column we're on
 
@@ -550,7 +571,7 @@ iris %>%
 
 Which makes more sense to you: summarizing with a for loop or with the summarize/across functions?
 
-------------
+------------------------------------------------------------------------
 
 A nice thing to remember with for loops is that you can do many things within the loop. For instance, here I will create a vector of column names and print out the "i"th element. Since i is going to equal the same number when I print out the column name vs the column values, it will match up nicely.
 
@@ -606,8 +627,8 @@ for (i in 1:length(spp_names)) {
 
 ```
 
----------
+------------------------------------------------------------------------
 
 Congrats on getting to the end!!!
 
--------
+------------------------------------------------------------------------
